@@ -1,0 +1,197 @@
+<p class="Title">vehicules works!</p>
+
+<div class="card">
+  <p-toolbar styleClass="mb-4">
+    <ng-template pTemplate="right">
+      <button pButton pRipple label="New" icon="pi pi-plus" class="p-button-success mr-2" (click)="openNew()"></button>
+      <button pButton pRipple [label]="Delete" icon="pi pi-trash" class="p-button-danger" (click)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length"></button>
+    </ng-template>
+
+
+  </p-toolbar>
+
+  <p-table [value]="vehicules" #dt  selectionMode="single" [(selection)]="selectedvehicule" dataKey="id" styleClass="p-datatable-customers"
+           [globalFilterFields]="['vehicule.matricule','vehicule.modele.marque.libellet', 'vehicule.matricule', ]"[rowsPerPageOptions]="[3,5,10,25,50]"   [loading]="loading" [rows]="5" [paginator]="true" stateStorage="local" stateKey="statedemo-local">
+
+    <ng-template pTemplate="caption">
+      <div class="flex align-items-center justify-content-between-right">
+        <h5 class="m-0">Manage Products</h5>
+        <span class="p-input-icon-right search">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" (input)="dt.filterGlobal($event.target.value, 'contains')" placeholder="Search..." class="form-control me-2" />
+                </span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header" >
+      <tr>
+        <th >#</th>
+        <th >matricule</th>
+        <th >nombre de places</th>
+        <th pSortableColumn="Modele">Modele<p-sortIcon field="Modele"></p-sortIcon></th>
+        <th >Marque</th>
+        <th >types voiture</th>
+        <th >status</th>
+        <th >action</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-v>
+      <tr>
+        <td>{{v.id}}</td>
+        <td>{{v.matricule}}</td>
+        <td>{{v.nombrePlace}}</td>
+        <td>{{v.modele.libellet}}</td>
+        <td>{{v.modele.marque.libellet}}</td>
+        <td>{{v.modele.typesVehicules.libellet}}</td>
+        <td *ngIf="v.status=='Innactif'"><a  class="btn" style="color: red">{{v.status}}</a></td>
+        <td *ngIf="v.status=='Actif'"><a class="btn" style="color: green">{{v.status}}</a></td>
+        <td>
+          <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success p-button-sm " (click)="editeVehicules(v.id)"></button>
+          <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-secondary mr-2" (click)="editProduct(product)"></button>
+          <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="delecteVehicules(v.id)"></button>
+        </td>
+
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog class="bg-success"
+          [(visible)]="productDialog"
+          [style]="{ width: '600px' }"
+          header="Vehicule Details"
+          [modal]="true"
+          styleClass="p-fluid "
+>
+  <ng-template pTemplate="content">
+
+
+
+
+    <div class="card">
+      <div class="card-header text-white "style="background-color: #93c27e;text-align: center">
+        <h2 *ngIf="vehicule.id">modification vehicules</h2>
+        <h2 *ngIf="!vehicule.id">formulaire vehicules</h2>
+      </div>
+
+      <div class="card-body ">
+        <form [formGroup]="formulaires" (ngSubmit)="savevehicule()">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label>matricule</label>
+              <input type="text" class="form-control" id="matricule" formControlName="matricule" placeholder="cause" required
+                     [ngClass]="{'is-invalid':formulaires.get('matricule').touched && !formulaires.get('matricule').valid}" required required minlength="8" [(ngModel)]="vehicule.matricule">
+              <div class="invalid-feedback">
+                <span *ngIf="formulaires.get('matricule').errors ?.required">entrez les bonnes information</span>
+                <span *ngIf="formulaires.get('matricule').errors ?.minlength">minimun 8 caractère</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Numero chassie</label>
+              <input type="text" class="form-control" id="numerochassie" formControlName="numerochassie" placeholder="numerochassie" required
+                     [(ngModel)]="vehicule.numerochassie"   [ngClass]="{'is-invalid':formulaires.get('numerochassie').touched && !formulaires.get('numerochassie').valid}" required required minlength="8">
+              <div class="invalid-feedback">
+                <span *ngIf="formulaires.get('numerochassie').errors ?.required">entrez les bonnes information</span>
+                <span *ngIf="formulaires.get('numerochassie').errors ?.minlength">minimun 8 caractère</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Marque</label>
+              <select id="disableelect" class="form-select"(change)="loadModele()" formControlName="marque">
+                <option   *ngFor="let marque of recupermarque " value="{{marque.id}}"  >{{marque.libellet}}</option>
+              </select>
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+
+              <label for="disablSelects" class="form-label">Modele</label>
+              <select id="disablSelects" class="form-select"formControlName="modele">
+                <option   *ngFor="let modeles of modeles " [ngValue]="modeles">{{modeles.libellet}}</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="disabledSelectsshd" class="form-label">types</label>
+              <select id="disabledSelectsshd" class="form-select"formControlName="typesvehicule">
+                <option   *ngFor="let types of recuperrertypes"value="{{types.id}}">{{types.libellet}}</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>Nombre place</label>
+              <input type="number" class="form-control" id="nombrePlace" formControlName="nombrePlace" placeholder="" required
+                     [(ngModel)]="vehicule.nombrePlace" [ngClass]="{'is-invalid':formulaires.get('nombrePlace').touched && !formulaires.get('nombrePlace').valid}" required required >
+              <div class="invalid-feedback">
+                <span *ngIf="formulaires.get('nombrePlace').errors ?.required">entrez les bonnes information</span>
+
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="disabledSelescc" class="form-label">Types de Carburant</label>
+              <select id="disabledSelescc" class="form-select" formControlName="typesCarburant" [(ngModel)]="vehicule.typesCarburant">
+                <option value="essence">essence</option>
+                <option value="gasoil">gasoil</option>
+                <option value="gaz">gaz</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="disableggss" class="form-label">Etats</label>
+              <select id="disableggss" class="form-select" formControlName="etats"  [(ngModel)]="vehicule.etats">
+                <option value="neuve">neuve</option>
+                <option value="pasNeuve">Pas Neuve</option>
+              </select>
+
+            </div>
+
+
+
+
+
+            <div class="col-md-6 mb-3">
+              <label for="disadSeles" class="form-label">Status</label>
+              <select id="disadSeles" class="form-select" formControlName="status"  [(ngModel)]="vehicule.status">
+                <option value="Actif">Actif</option>
+                <option value="Innactif">Innactif</option>
+
+              </select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>date Achat</label>
+              <input type="date" class="form-control" id="cause" formControlName="dateAchat"placeholder="dateAchat" required
+                     [ngClass]="{'is-invalid':formulaires.get('dateAchat').touched && !formulaires.get('dateAchat').valid}" required required minlength="8"  [(ngModel)]="vehicule.dateAchat">
+              <div class="invalid-feedback">
+                <span *ngIf="formulaires.get('dateAchat').errors ?.required">entrez les bonnes information</span>
+                <span *ngIf="formulaires.get('dateAchat').errors ?.minlength">minimun 8 caractère</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>date Achat</label>
+              <input type="date" class="form-control" id="dateSOrtie" formControlName="dateSOrtie"placeholder="" required
+                     [(ngModel)]="vehicule.dateSOrtie"        [ngClass]="{'is-invalid':formulaires.get('dateSOrtie').touched && !formulaires.get('dateSOrtie').valid}" required required minlength="8">
+              <div class="invalid-feedback">
+                <span *ngIf="formulaires.get('dateSOrtie').errors ?.required">entrez les bonnes information</span>
+                <span *ngIf="formulaires.get('dateSOrtie').errors ?.minlength">minimun 8 caractère</span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label>date mis en Marche</label>
+              <input  dataformatas="dd/MM/yyyy" type="date" class="form-control" id="dateMisEnMarche" formControlName="dateMisEnMarche"placeholder="dateAchat" required
+                      [(ngModel)]="vehicule.dateMisEnMarche "  [ngClass]="{'is-invalid':formulaires.get('dateMisEnMarche').touched && !formulaires.get('dateMisEnMarche').valid}" required required minlength="8">
+              <div class="invalid-feedback">
+                <span *ngIf="formulaires.get('dateMisEnMarche').errors ?.required">entrez les bonnes information</span>
+                <span *ngIf="formulaires.get('dateMisEnMarche').errors ?.minlength">minimun 8 caractère</span>
+              </div>
+            </div>
+
+          </div>
+          <div class="text-right">
+            <button class="btn btn-success" [disabled]="formulaires.invalid" type="submit">ajouter</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </ng-template>
+</p-dialog>
+<p-confirmDialog [style]="{width: '600px'}"></p-confirmDialog>
+
+
+
